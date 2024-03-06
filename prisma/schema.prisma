@@ -1,0 +1,191 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  uuid               String               @id @default(uuid())
+  email              String               @unique
+  password           String
+  name               String
+  age                Int
+  avatar             String?
+  isOnline           Boolean              @default(false)
+  refreshToken       String?
+  createAt           DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  acquaintanceOfId   String?
+  groupChatUuid      String?
+  userUuid           String?
+  role               UserRole
+  class              Class[]
+  comment            Comment[]
+  acquaintanceOf     User?                @relation("Acquaintance", fields: [acquaintanceOfId], references: [uuid], onDelete: SetNull)
+  acquaintance       User[]               @relation("Acquaintance")
+  groupChat          GroupChat?           @relation(fields: [groupChatUuid], references: [uuid], onDelete: SetNull)
+  userAssignExercise UserAssignExercise[]
+  userChooesOption   UserChooesOption[]
+  userJoinClass      UserJoinClass[]
+}
+
+model Class {
+  uuid                 String          @id @default(uuid())
+  name                 String
+  description          String?
+  password             String?
+  background           String?
+  theme                String?
+  requireApprove       Boolean         @default(false)
+  owner                 User?           @relation(fields: [createdByTeacherUuid], references: [uuid], onDelete: Cascade)
+  createdByTeacherUuid String
+  userJoinClass        UserJoinClass[]
+  posts                 Post[]
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
+}
+
+model File {
+  uuid                   String              @id @default(uuid())
+  name                   String
+  key                    String
+  createdAt              DateTime            @default(now())
+  updatedAt              DateTime            @updatedAt
+  postUuid               String?
+  userAssignExerciseUuid String?
+  post                   Post?               @relation(fields: [postUuid], references: [uuid], onDelete: Cascade)
+  userAssignExercise     UserAssignExercise? @relation(fields: [userAssignExerciseUuid], references: [uuid], onDelete: SetNull)
+}
+
+model Comment {
+  uuid          String @id @default(uuid())
+  userUUID      String
+  postUuid      String
+  content       String
+  createdInTime String
+  ceratedInDate String
+  post          Post   @relation(fields: [postUuid], references: [uuid], onDelete: Cascade)
+  user          User   @relation(fields: [userUUID], references: [uuid])
+}
+
+model Option {
+  uuid             String             @id @default(uuid())
+  voteDataPostUuid String
+  value            String
+  percent          Int             @default(0)
+  voteData         VoteData          @relation(fields: [voteDataPostUuid], references: [postUuid], onDelete: Cascade)
+  userChooesOption UserChooesOption[]
+}
+
+model UserChooesOption {
+  userUuid   String
+  optionUuid String
+  option     Option @relation(fields: [optionUuid], references: [uuid], onDelete: Cascade)
+  user       User   @relation(fields: [userUuid], references: [uuid])
+
+  @@id([userUuid, optionUuid])
+}
+
+model VoteData {
+  postUuid String   @id
+  title    String
+  options  Option[]
+  post     Post     @relation(fields: [postUuid], references: [uuid], onDelete: Cascade)
+}
+
+model Post {
+  uuid               String               @id @default(uuid())
+  content            String?
+  type               PostType
+  createdInTime      String
+  createdInDate      String
+  endInTime          String?
+  endInDate          String?
+  class             Class                @relation(fields: [classUuid], references: [uuid], onDelete: Cascade)
+  classUuid          String
+  comments           Comment[]
+  files              File[]
+  userAssignExercise UserAssignExercise[]
+  voteData           VoteData?
+}
+
+model UserAssignExercise {
+  uuid         String @id @default(uuid())
+  postUuid     String
+  userUuid     String
+  feedback     String
+  assignInTime String
+  assignInDate String
+  files        File[]
+  post         Post   @relation(fields: [postUuid], references: [uuid], onDelete: Cascade)
+  user         User?   @relation(fields: [userUuid], references: [uuid], onDelete: SetNull)
+}
+
+model UserJoinClass {
+  userUuid  String
+  classUuid String
+  status    JOINSTATUS
+  class     Class      @relation(fields: [classUuid], references: [uuid], onDelete: Cascade)
+  user      User       @relation(fields: [userUuid], references: [uuid], onDelete: Cascade)
+
+  @@id([userUuid, classUuid])
+}
+
+model ApiPermission {
+  id        Int             @id @default(autoincrement())
+  api       String
+  action    String
+  role      PertmissionRole
+  condition String?
+}
+
+model GroupChat {
+  uuid             String    @id @default(uuid())
+  name             String
+  lastMessaageUuid String?
+  message          Message[]
+  user             User[]
+}
+
+model Message {
+  uuid          String        @id @default(uuid())
+  fromUserUuid  String
+  toGroupUuid   String
+  content       String
+  messageStatus MessageStatus
+  sendInTime    String
+  sendInDate    String
+  groupChatUuid String?
+  groupChat     GroupChat?    @relation(fields: [groupChatUuid], references: [uuid])
+}
+
+enum UserRole {
+  TEACHER
+  STUDENT
+}
+
+enum PostType {
+  Exercise
+  Annoucement
+  Vote
+}
+
+enum JOINSTATUS {
+  PENDING
+  JOINED
+}
+
+enum PertmissionRole {
+  TEACHER
+  STUDENT
+  ALL
+}
+
+enum MessageStatus {
+  SENT
+  RECEIVED
+  READED
+}
