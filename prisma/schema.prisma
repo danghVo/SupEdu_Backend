@@ -18,18 +18,31 @@ model User {
   refreshToken       String?
   createAt           DateTime             @default(now())
   updatedAt          DateTime             @updatedAt
-  acquaintanceOfId   String?
-  groupChatUuid      String?
-  userUuid           String?
+  isVerify           Boolean              @default(false)
+  verifyToken        String?
   role               UserRole
   class              Class[]
   comment            Comment[]
-  acquaintanceOf     User?                @relation("Acquaintance", fields: [acquaintanceOfId], references: [uuid], onDelete: SetNull)
-  acquaintance       User[]               @relation("Acquaintance")
-  groupChat          GroupChat?           @relation(fields: [groupChatUuid], references: [uuid], onDelete: SetNull)
+  groups         UserInGroup[]          
   userAssignExercise UserAssignExercise[]
   userChooesOption   UserChooesOption[]
   userJoinClass      UserJoinClass[]
+  Message            Message[]
+  Notification       Notification[]
+  UserReadMessage    UserReadMessage[]
+}
+
+model Notification {
+  uuid          String   @id @default(uuid())
+  userUuid      String
+  title         String
+  message       String
+  isRead        Boolean  @default(false)
+  link          String
+  createdInTime String
+  createdInDate String
+  createdAt     DateTime @default(now())
+  user          User     @relation(fields: [userUuid], references: [uuid], onDelete: Cascade)
 }
 
 model Class {
@@ -37,13 +50,13 @@ model Class {
   name                 String
   description          String?
   password             String?
-  background           String?
   theme                String?
+  textColor            String?         @default("black")
   requireApprove       Boolean         @default(false)
-  owner                 User?           @relation(fields: [createdByTeacherUuid], references: [uuid], onDelete: Cascade)
+  owner                User?           @relation(fields: [createdByTeacherUuid], references: [uuid], onDelete: Cascade)
   createdByTeacherUuid String
   userJoinClass        UserJoinClass[]
-  posts                 Post[]
+  posts                Post[]
   createdAt            DateTime        @default(now())
   updatedAt            DateTime        @updatedAt
 }
@@ -51,60 +64,63 @@ model Class {
 model File {
   uuid                   String              @id @default(uuid())
   name                   String
-  key                    String
   createdAt              DateTime            @default(now())
   updatedAt              DateTime            @updatedAt
+  extension              String
   postUuid               String?
   userAssignExerciseUuid String?
   post                   Post?               @relation(fields: [postUuid], references: [uuid], onDelete: Cascade)
-  userAssignExercise     UserAssignExercise? @relation(fields: [userAssignExerciseUuid], references: [uuid], onDelete: SetNull)
+  userAssignExercise     UserAssignExercise? @relation(fields: [userAssignExerciseUuid], references: [uuid], onDelete: Cascade)
 }
 
 model Comment {
   uuid          String @id @default(uuid())
-  userUUID      String
+  userUuid      String
   postUuid      String
   content       String
   createdInTime String
-  ceratedInDate String
+  createdInDate String
   post          Post   @relation(fields: [postUuid], references: [uuid], onDelete: Cascade)
-  user          User   @relation(fields: [userUUID], references: [uuid])
+  user          User   @relation(fields: [userUuid], references: [uuid])
 }
 
 model Option {
   uuid             String             @id @default(uuid())
-  voteDataPostUuid String
+  voteUuid         String
   value            String
-  percent          Int             @default(0)
-  voteData         VoteData          @relation(fields: [voteDataPostUuid], references: [postUuid], onDelete: Cascade)
+  voteData         VoteData           @relation(fields: [voteUuid], references: [uuid], onDelete: Cascade)
   userChooesOption UserChooesOption[]
 }
 
 model UserChooesOption {
   userUuid   String
-  optionUuid String
-  option     Option @relation(fields: [optionUuid], references: [uuid], onDelete: Cascade)
-  user       User   @relation(fields: [userUuid], references: [uuid])
+  optionUuid String?
+  voteUuid   String
+  Vote       VoteData @relation(fields: [voteUuid], references: [uuid], onDelete: Cascade)
+  option     Option?  @relation(fields: [optionUuid], references: [uuid], onDelete: SetNull)
+  user       User     @relation(fields: [userUuid], references: [uuid], onDelete: Cascade)
 
-  @@id([userUuid, optionUuid])
+  @@id([userUuid, voteUuid])
 }
 
 model VoteData {
-  postUuid String   @id
-  title    String
-  options  Option[]
-  post     Post     @relation(fields: [postUuid], references: [uuid], onDelete: Cascade)
+  uuid             String             @id @default(uuid())
+  options          Option[]
+  post             Post               @relation(fields: [postUuid], references: [uuid], onDelete: Cascade)
+  postUuid         String             @unique
+  UserChooesOption UserChooesOption[]
 }
 
 model Post {
   uuid               String               @id @default(uuid())
+  title              String
   content            String?
   type               PostType
-  createdInTime      String
-  createdInDate      String
+  postInTime         String
+  postInDate         String
   endInTime          String?
   endInDate          String?
-  class             Class                @relation(fields: [classUuid], references: [uuid], onDelete: Cascade)
+  class              Class                @relation(fields: [classUuid], references: [uuid], onDelete: Cascade)
   classUuid          String
   comments           Comment[]
   files              File[]
@@ -113,15 +129,18 @@ model Post {
 }
 
 model UserAssignExercise {
-  uuid         String @id @default(uuid())
+  uuid         String        @id @default(uuid())
   postUuid     String
   userUuid     String
   feedback     String
-  assignInTime String
-  assignInDate String
-  files        File[]
-  post         Post   @relation(fields: [postUuid], references: [uuid], onDelete: Cascade)
-  user         User?   @relation(fields: [userUuid], references: [uuid], onDelete: SetNull)
+  score        Int
+  status       AssignStatus?
+  isMarked     Boolean       @default(false)
+  assignInTime String?
+  assignInDate String?
+  assignFiles  File[]
+  post         Post          @relation(fields: [postUuid], references: [uuid], onDelete: Cascade)
+  user         User          @relation(fields: [userUuid], references: [uuid], onDelete: Cascade)
 }
 
 model UserJoinClass {
@@ -143,23 +162,45 @@ model ApiPermission {
 }
 
 model GroupChat {
-  uuid             String    @id @default(uuid())
-  name             String
-  lastMessaageUuid String?
-  message          Message[]
-  user             User[]
+  uuid             String            @id @default(uuid())
+  name             String?
+  avatar           String?
+  lastMessageUuid String?
+  messages          Message[]
+  users             UserInGroup[]
+}
+
+model UserInGroup {
+  userUuid    String
+  groupChatUuid String
+  groupChat   GroupChat @relation(fields: [groupChatUuid], references: [uuid], onDelete: Cascade)
+  user        User      @relation(fields: [userUuid], references: [uuid], onDelete: Cascade)
+
+  @@id([userUuid, groupChatUuid])
+}
+
+model UserReadMessage {
+  userUuid      String
+  messageUuid   String
+  readInTime    String?
+  readInDate    String?
+  user          User      @relation(fields: [userUuid], references: [uuid], onDelete: Cascade)
+  message       Message   @relation(fields: [messageUuid], references: [uuid], onDelete: Cascade)
+
+  @@id([userUuid, messageUuid])
 }
 
 model Message {
-  uuid          String        @id @default(uuid())
-  fromUserUuid  String
-  toGroupUuid   String
-  content       String
-  messageStatus MessageStatus
-  sendInTime    String
-  sendInDate    String
-  groupChatUuid String?
-  groupChat     GroupChat?    @relation(fields: [groupChatUuid], references: [uuid])
+  uuid            String            @id @default(uuid())
+  fromUserUuid    String?
+  fromUser        User?             @relation(fields: [fromUserUuid], references: [uuid], onDelete: Cascade)
+  content         String
+  sendInTime      String
+  sendInDate      String
+  sendIn          DateTime        @default(now())
+  groupChatUuid   String?
+  groupChat       GroupChat?        @relation(fields: [groupChatUuid], references: [uuid])
+  UserReadMessage UserReadMessage[]
 }
 
 enum UserRole {
@@ -169,7 +210,7 @@ enum UserRole {
 
 enum PostType {
   Exercise
-  Annoucement
+  Announcement
   Vote
 }
 
@@ -184,8 +225,12 @@ enum PertmissionRole {
   ALL
 }
 
-enum MessageStatus {
-  SENT
-  RECEIVED
-  READED
+// enum MessageStatus {
+//   SENT
+//   RECEIVED
+// }
+
+enum AssignStatus {
+  ONTIME
+  LATE
 }
