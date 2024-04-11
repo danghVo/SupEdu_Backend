@@ -1,7 +1,9 @@
-import { Body, Controller, Param, Post, Res } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Req, Res, UseInterceptors } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignInDto, SignUpDto } from './dto';
 import { Public } from './decorator/public.decorator';
+import { Response } from 'express';
+import { success, fail } from './html';
 
 @Controller('auth')
 export class AuthController {
@@ -28,5 +30,23 @@ export class AuthController {
         await this.authService.logOut(uuid);
 
         return { message: 'Đăng xuất thành công' };
+    }
+
+    @Public()
+    @Get('verify/:userUuid/:token')
+    async verifyMail(@Res() res: Response, @Param('token') token: any, @Param('userUuid') userUuid: any) {
+        const status = await this.authService.verifyMail(userUuid, token);
+
+        if (status) {
+            return res.send(success());
+        } else res.send(fail());
+    }
+
+    @Public()
+    @Get('resend-verify-mail/:uuid')
+    async resendVerifyMail(@Param('uuid') uuid: string) {
+        const data = await this.authService.resendVerifyMail(uuid);
+
+        return data;
     }
 }
