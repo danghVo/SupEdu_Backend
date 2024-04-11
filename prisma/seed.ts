@@ -115,6 +115,7 @@ async function main() {
             password: teacherPass,
             role: 'TEACHER',
             name: 'Teacher',
+            isVerify: true,
             age: 30,
         },
     });
@@ -124,6 +125,8 @@ async function main() {
             name: 'test class',
             description: 'test class description',
             createdByTeacherUuid: teacher.uuid,
+            theme: 'from-[#000] to-[#000]',
+            requireApprove: false,
         },
     });
 
@@ -136,6 +139,7 @@ async function main() {
             role: 'STUDENT',
             name: 'student',
             age: 15,
+            isVerify: true,
         },
     });
 }
