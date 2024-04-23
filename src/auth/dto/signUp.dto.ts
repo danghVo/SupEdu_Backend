@@ -4,12 +4,19 @@ type UserRole = 'TEACHER' | 'STUDENT';
 
 export class SignUpDto {
     @IsNotEmpty()
-    @IsEmail()
+    @IsEmail(
+        {},
+        {
+            message: 'Sai định dạng email',
+        },
+    )
     email: string;
 
-    @IsStrongPassword()
     @IsNotEmpty()
     password: string;
+
+    @IsNotEmpty()
+    confirmPassword: string;
 
     @IsString()
     @IsNotEmpty()

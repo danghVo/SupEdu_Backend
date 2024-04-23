@@ -43,9 +43,9 @@ export class AuthController {
     }
 
     @Public()
-    @Get('resend-verify-mail/:uuid')
-    async resendVerifyMail(@Param('uuid') uuid: string) {
-        const data = await this.authService.resendVerifyMail(uuid);
+    @Get('resend-verify-mail/:userUuid')
+    async resendVerifyMail(@Param('userUuid') userUuid: string) {
+        const data = await this.authService.resendVerifyMail(userUuid);
 
         return data;
     }

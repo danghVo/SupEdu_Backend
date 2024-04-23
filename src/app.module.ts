@@ -9,9 +9,6 @@ import { AwsModule } from './aws/aws.module';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { MailModule } from './mail/mail.module';
 import { SocketModule } from './socket/socket.module';
-import { CronjobModule } from './cronjob/cronjob.module';
-import { ScheduleModule } from '@nestjs/schedule';
-import { join } from 'path';
 import { NotificationModule } from './notification/notification.module';
 import { ChatModule } from './chat/chat.module';
 
@@ -46,8 +43,6 @@ import { ChatModule } from './chat/chat.module';
         AwsModule,
         MailModule,
         SocketModule,
-        ScheduleModule.forRoot(),
-        CronjobModule,
         NotificationModule,
         ChatModule,
     ],

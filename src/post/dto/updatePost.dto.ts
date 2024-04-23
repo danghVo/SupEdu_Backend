@@ -8,21 +8,23 @@ interface VoteData {
 
 export class UpdatePostDto {
     @IsOptional()
-    @IsString()
     title: string;
 
     @IsOptional()
     content: string;
 
     @IsOptional()
-    @IsArray()
-    files: Array<File>;
+    files: any;
 
     @IsOptional()
-    @IsObject()
-    voteData: VoteData;
+    voteData: string | null;
 
     @IsOptional()
-    @IsObject()
-    endTime: { endInTime: string; endInDate: string };
+    timeTaskEnd: string;
+
+    @IsOptional()
+    filesUpdate: string;
+
+    @IsOptional()
+    hashFiles: string;
 }

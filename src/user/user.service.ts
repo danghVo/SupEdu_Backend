@@ -1,31 +1,70 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { Injectable, ForbiddenException } from '@nestjs/common';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { ProfileDto, PasswordChagneDto } from './dto';
 
 import * as argon2 from 'argon2';
+import * as moment from 'moment';
+import { AwsService } from 'src/aws/aws.service';
 
 @Injectable()
 export class UserService {
-    constructor(private prisma: PrismaService) {}
+    constructor(
+        private prisma: PrismaService,
+        private aws: AwsService,
+    ) {}
 
     async profile(uuid: string) {
         const user = await this.prisma.user.findUnique({
             where: { uuid },
         });
 
+        if (user.avatar) {
+            user.avatar = await this.aws.getImage(user.avatar);
+        }
+
         delete user.password;
         delete user.refreshToken;
+        delete user.isVerify;
+        delete user.verifyToken;
+        delete user.updatedAt;
 
-        return user;
+        return {
+            ...user,
+            createAt: moment(user.createAt).format('DD-MM-YYYY'),
+        };
     }
 
-    async updateProfile(uuid: string, profileDto: ProfileDto) {
+    async getUuid(email: string) {
         try {
+            const user = await this.prisma.user.findUniqueOrThrow({
+                where: { email },
+            });
+
+            return user.uuid;
+        } catch (error) {
+            if (error instanceof PrismaClientKnownRequestError) {
+                if (error.code === 'P2002') {
+                    throw new Error('Người dùng không tồn tại');
+                }
+            } else throw new Error('Lỗi không xác định');
+        }
+    }
+
+    async updateProfile(uuid: string, profileDto: ProfileDto, avatar: Express.Multer.File) {
+        try {
+            let avatarKey = undefined;
+
+            if (avatar) {
+                avatarKey = await this.aws.uploadAvatar(uuid, avatar);
+            }
+
             const updatedProfile = await this.prisma.user.update({
                 where: { uuid },
                 data: {
                     name: profileDto.name,
+                    age: parseInt(profileDto.age),
+                    avatar: avatarKey,
                 },
             });
 
@@ -50,6 +89,9 @@ export class UserService {
             throw new ForbiddenException('Mật khẩu cũ không đúng');
         }
 
+        if (passwordChagneDto.newPassword !== passwordChagneDto.confirmPassword)
+            throw new ForbiddenException('Mật khẩu xác nhận không khớp');
+
         try {
             const hashNewpassword = await argon2.hash(passwordChagneDto.newPassword);
 
@@ -64,7 +106,7 @@ export class UserService {
         } catch (error) {
             if (error instanceof PrismaClientKnownRequestError) {
                 if (error.code === 'P2025') {
-                    throw new Error('Người dùng không tồn tại');
+                    throw new ForbiddenException('Người dùng không tồn tại');
                 }
             } else throw new Error('Lỗi không xác định');
         }

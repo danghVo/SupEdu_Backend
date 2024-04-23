@@ -5,6 +5,12 @@ export class PasswordChagneDto {
     oldPassword: string;
 
     @IsString()
-    @IsStrongPassword()
+    @IsStrongPassword(
+        { minLength: 8, minLowercase: 1, minUppercase: 1, minNumbers: 1, minSymbols: 1 },
+        { message: 'Mật khẩu không đủ mạnh' },
+    )
     newPassword: string;
+
+    @IsString()
+    confirmPassword: string;
 }

@@ -1,0 +1,269 @@
+//// ------------------------------------------------------
+//// THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+//// ------------------------------------------------------
+
+Table User {
+  uuid String [pk]
+  email String [unique, not null]
+  password String [not null]
+  name String [not null]
+  age Int [not null]
+  avatar String
+  refreshToken String
+  createAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  isVerify Boolean [not null, default: false]
+  verifyToken String
+  role UserRole [not null]
+  class Class [not null]
+  comment Comment [not null]
+  groups UserInGroup [not null]
+  userAssignExercise UserAssignExercise [not null]
+  userChooesOption UserChooesOption [not null]
+  userJoinClass UserJoinClass [not null]
+  Message Message [not null]
+  Notification Notification [not null]
+  UserReadMessage UserReadMessage [not null]
+}
+
+Table Notification {
+  uuid String [pk]
+  userUuid String [not null]
+  title String [not null]
+  message String [not null]
+  isRead Boolean [not null, default: false]
+  link String [not null]
+  createdInTime String [not null]
+  createdInDate String [not null]
+  createdAt DateTime [default: `now()`, not null]
+  user User [not null]
+}
+
+Table Class {
+  uuid String [pk]
+  name String [not null]
+  description String
+  password String
+  theme String
+  textColor String [default: 'black']
+  requireApprove Boolean [not null, default: false]
+  owner User [not null]
+  ownerUuid String [not null]
+  userJoinClass UserJoinClass [not null]
+  posts Post [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+}
+
+Table File {
+  uuid String [pk]
+  name String [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  extension String [not null]
+  postUuid String
+  userAssignExerciseUuid String
+  post Post
+  userAssignExercise UserAssignExercise
+}
+
+Table Comment {
+  uuid String [pk]
+  userUuid String [not null]
+  postUuid String [not null]
+  content String [not null]
+  createdInTime String [not null]
+  createdInDate String [not null]
+  post Post [not null]
+  user User [not null]
+}
+
+Table Option {
+  uuid String [pk]
+  voteUuid String [not null]
+  value String [not null]
+  voteData VoteData [not null]
+  userChooesOption UserChooesOption [not null]
+}
+
+Table UserChooesOption {
+  userUuid String [not null]
+  optionUuid String
+  voteUuid String [not null]
+  Vote VoteData [not null]
+  option Option
+  user User [not null]
+
+  indexes {
+    (userUuid, voteUuid) [pk]
+  }
+}
+
+Table VoteData {
+  uuid String [pk]
+  options Option [not null]
+  post Post [not null]
+  postUuid String [unique, not null]
+  UserChooesOption UserChooesOption [not null]
+}
+
+Table Post {
+  uuid String [pk]
+  title String [not null]
+  content String
+  type PostType [not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  endInTime String
+  endInDate String
+  class Class [not null]
+  classUuid String [not null]
+  comments Comment [not null]
+  files File [not null]
+  userAssignExercise UserAssignExercise [not null]
+  voteData VoteData
+}
+
+Table UserAssignExercise {
+  uuid String [pk]
+  postUuid String [not null]
+  userUuid String [not null]
+  feedback String [not null]
+  score Int [not null]
+  status AssignStatus
+  isMarked Boolean [not null, default: false]
+  assignInTime String
+  assignInDate String
+  assignFiles File [not null]
+  post Post [not null]
+  user User [not null]
+}
+
+Table UserJoinClass {
+  userUuid String [not null]
+  classUuid String [not null]
+  status JOINSTATUS [not null]
+  class Class [not null]
+  user User [not null]
+
+  indexes {
+    (userUuid, classUuid) [pk]
+  }
+}
+
+Table GroupChat {
+  uuid String [pk]
+  name String
+  avatar String
+  lastMessageUuid String [not null]
+  messages Message [not null]
+  users UserInGroup [not null]
+}
+
+Table UserInGroup {
+  userUuid String [not null]
+  groupChatUuid String [not null]
+  groupChat GroupChat [not null]
+  user User [not null]
+
+  indexes {
+    (userUuid, groupChatUuid) [pk]
+  }
+}
+
+Table UserReadMessage {
+  userUuid String [not null]
+  messageUuid String [not null]
+  readInTime String
+  readInDate String
+  user User [not null]
+  message Message [not null]
+
+  indexes {
+    (userUuid, messageUuid) [pk]
+  }
+}
+
+Table Message {
+  uuid String [pk]
+  fromUserUuid String
+  fromUser User
+  content String [not null]
+  sendInTime String [not null]
+  sendInDate String [not null]
+  sendIn DateTime [default: `now()`, not null]
+  groupChatUuid String
+  groupChat GroupChat
+  UserReadMessage UserReadMessage [not null]
+}
+
+Enum UserRole {
+  TEACHER
+  STUDENT
+}
+
+Enum PostType {
+  Exercise
+  Announcement
+  Vote
+}
+
+Enum JOINSTATUS {
+  PENDING
+  JOINED
+}
+
+Enum PertmissionRole {
+  TEACHER
+  STUDENT
+  ALL
+}
+
+Enum AssignStatus {
+  ONTIME
+  LATE
+}
+
+Ref: Notification.userUuid > User.uuid [delete: Cascade]
+
+Ref: Class.ownerUuid > User.uuid [delete: Cascade]
+
+Ref: File.postUuid > Post.uuid [delete: Cascade]
+
+Ref: File.userAssignExerciseUuid > UserAssignExercise.uuid [delete: Cascade]
+
+Ref: Comment.postUuid > Post.uuid [delete: Cascade]
+
+Ref: Comment.userUuid > User.uuid
+
+Ref: Option.voteUuid > VoteData.uuid [delete: Cascade]
+
+Ref: UserChooesOption.voteUuid > VoteData.uuid [delete: Cascade]
+
+Ref: UserChooesOption.optionUuid > Option.uuid [delete: Set Null]
+
+Ref: UserChooesOption.userUuid > User.uuid [delete: Cascade]
+
+Ref: VoteData.postUuid - Post.uuid [delete: Cascade]
+
+Ref: Post.classUuid > Class.uuid [delete: Cascade]
+
+Ref: UserAssignExercise.postUuid > Post.uuid [delete: Cascade]
+
+Ref: UserAssignExercise.userUuid > User.uuid [delete: Cascade]
+
+Ref: UserJoinClass.classUuid > Class.uuid [delete: Cascade]
+
+Ref: UserJoinClass.userUuid > User.uuid [delete: Cascade]
+
+Ref: UserInGroup.groupChatUuid > GroupChat.uuid [delete: Cascade]
+
+Ref: UserInGroup.userUuid > User.uuid [delete: Cascade]
+
+Ref: UserReadMessage.userUuid > User.uuid [delete: Cascade]
+
+Ref: UserReadMessage.messageUuid > Message.uuid [delete: Cascade]
+
+Ref: Message.fromUserUuid > User.uuid [delete: Set Null]
+
+Ref: Message.groupChatUuid > GroupChat.uuid

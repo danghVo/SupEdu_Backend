@@ -1,4 +1,4 @@
-import { File, Option } from '@prisma/client';
+import { Option } from '@prisma/client';
 import { IsArray, IsEnum, IsObject, IsOptional, IsString } from 'class-validator';
 
 interface VoteData {
@@ -13,18 +13,18 @@ export class CreatePostDto {
     @IsOptional()
     content: string;
 
-    @IsEnum(['Annoucement', 'Exercise', 'Vote'])
-    type: 'Annoucement' | 'Exercise' | 'Vote';
+    @IsEnum(['Announcement', 'Exercise', 'Vote'])
+    type: 'Announcement' | 'Exercise' | 'Vote';
 
     @IsOptional()
-    @IsArray()
-    files: Array<File>;
+    files: any;
 
     @IsOptional()
-    @IsObject()
-    voteData: VoteData;
+    voteData: string | null;
 
     @IsOptional()
-    @IsObject()
-    endTime: { endInTime: string; endInDate: string };
+    timeTaskEnd: string;
+
+    @IsOptional()
+    hashFiles: string;
 }

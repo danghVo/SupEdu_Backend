@@ -1,12 +1,14 @@
-import { IsEmail, IsNotEmpty, IsString, IsStrongPassword } from "class-validator";
+import { IsEmail, IsNotEmpty, IsString, IsStrongPassword } from 'class-validator';
 
 export class SignInDto {
-    @IsNotEmpty()
-    @IsEmail()
+    @IsEmail(
+        {},
+        {
+            message: 'Sai định dạng email',
+        },
+    )
     email: string;
 
     @IsString()
-    @IsNotEmpty()
     password: string;
 }
-

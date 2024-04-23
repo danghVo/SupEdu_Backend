@@ -1,6 +1,8 @@
-import { IsOptional, IsString } from 'class-validator';
+import { Expose } from 'class-transformer';
+import { IsBoolean, IsOptional, IsString } from 'class-validator';
 
 export class CreateClassDto {
+    @IsOptional()
     @IsString()
     name: string;
 
@@ -12,11 +14,12 @@ export class CreateClassDto {
     @IsString()
     password: string;
 
-    @IsOptional()
     @IsString()
     theme: string;
 
     @IsOptional()
+    requireApprove: string;
+
     @IsString()
-    background: string;
+    textColor: string;
 }

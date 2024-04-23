@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
 import { ClassService } from './class.service';
 import { ClassController } from './class.controller';
-import { PostService } from 'src/post/service';
 import { PostModule } from 'src/post/post.module';
+import { AwsModule } from 'src/aws/aws.module';
 
 @Module({
-    imports: [PostModule],
+    imports: [PostModule, AwsModule],
     controllers: [ClassController],
     providers: [ClassService],
 })

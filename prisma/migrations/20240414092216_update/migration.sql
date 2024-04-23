@@ -21,13 +21,9 @@ CREATE TABLE "User" (
     "name" TEXT NOT NULL,
     "age" INTEGER NOT NULL,
     "avatar" TEXT,
-    "isOnline" BOOLEAN NOT NULL DEFAULT false,
     "refreshToken" TEXT,
     "createAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
-    "acquaintanceOfId" TEXT,
-    "groupChatUuid" TEXT,
-    "userUuid" TEXT,
     "isVerify" BOOLEAN NOT NULL DEFAULT false,
     "verifyToken" TEXT,
     "role" "UserRole" NOT NULL,
@@ -59,7 +55,7 @@ CREATE TABLE "Class" (
     "theme" TEXT,
     "textColor" TEXT DEFAULT 'black',
     "requireApprove" BOOLEAN NOT NULL DEFAULT false,
-    "createdByTeacherUuid" TEXT NOT NULL,
+    "ownerUuid" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
@@ -157,23 +153,21 @@ CREATE TABLE "UserJoinClass" (
 );
 
 -- CreateTable
-CREATE TABLE "ApiPermission" (
-    "id" SERIAL NOT NULL,
-    "api" TEXT NOT NULL,
-    "action" TEXT NOT NULL,
-    "role" "PertmissionRole" NOT NULL,
-    "condition" TEXT,
+CREATE TABLE "GroupChat" (
+    "uuid" TEXT NOT NULL,
+    "name" TEXT,
+    "avatar" TEXT,
+    "lastMessageUuid" TEXT NOT NULL,
 
-    CONSTRAINT "ApiPermission_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "GroupChat_pkey" PRIMARY KEY ("uuid")
 );
 
 -- CreateTable
-CREATE TABLE "GroupChat" (
-    "uuid" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
-    "lastMessaageUuid" TEXT,
+CREATE TABLE "UserInGroup" (
+    "userUuid" TEXT NOT NULL,
+    "groupChatUuid" TEXT NOT NULL,
 
-    CONSTRAINT "GroupChat_pkey" PRIMARY KEY ("uuid")
+    CONSTRAINT "UserInGroup_pkey" PRIMARY KEY ("userUuid","groupChatUuid")
 );
 
 -- CreateTable
@@ -193,6 +187,7 @@ CREATE TABLE "Message" (
     "content" TEXT NOT NULL,
     "sendInTime" TEXT NOT NULL,
     "sendInDate" TEXT NOT NULL,
+    "sendIn" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "groupChatUuid" TEXT,
 
     CONSTRAINT "Message_pkey" PRIMARY KEY ("uuid")
@@ -205,16 +200,10 @@ CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 CREATE UNIQUE INDEX "VoteData_postUuid_key" ON "VoteData"("postUuid");
 
 -- AddForeignKey
-ALTER TABLE "User" ADD CONSTRAINT "User_acquaintanceOfId_fkey" FOREIGN KEY ("acquaintanceOfId") REFERENCES "User"("uuid") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "User" ADD CONSTRAINT "User_groupChatUuid_fkey" FOREIGN KEY ("groupChatUuid") REFERENCES "GroupChat"("uuid") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
 ALTER TABLE "Notification" ADD CONSTRAINT "Notification_userUuid_fkey" FOREIGN KEY ("userUuid") REFERENCES "User"("uuid") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Class" ADD CONSTRAINT "Class_createdByTeacherUuid_fkey" FOREIGN KEY ("createdByTeacherUuid") REFERENCES "User"("uuid") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "Class" ADD CONSTRAINT "Class_ownerUuid_fkey" FOREIGN KEY ("ownerUuid") REFERENCES "User"("uuid") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "File" ADD CONSTRAINT "File_postUuid_fkey" FOREIGN KEY ("postUuid") REFERENCES "Post"("uuid") ON DELETE CASCADE ON UPDATE CASCADE;
@@ -257,6 +246,12 @@ ALTER TABLE "UserJoinClass" ADD CONSTRAINT "UserJoinClass_classUuid_fkey" FOREIG
 
 -- AddForeignKey
 ALTER TABLE "UserJoinClass" ADD CONSTRAINT "UserJoinClass_userUuid_fkey" FOREIGN KEY ("userUuid") REFERENCES "User"("uuid") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "UserInGroup" ADD CONSTRAINT "UserInGroup_groupChatUuid_fkey" FOREIGN KEY ("groupChatUuid") REFERENCES "GroupChat"("uuid") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "UserInGroup" ADD CONSTRAINT "UserInGroup_userUuid_fkey" FOREIGN KEY ("userUuid") REFERENCES "User"("uuid") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "UserReadMessage" ADD CONSTRAINT "UserReadMessage_userUuid_fkey" FOREIGN KEY ("userUuid") REFERENCES "User"("uuid") ON DELETE CASCADE ON UPDATE CASCADE;

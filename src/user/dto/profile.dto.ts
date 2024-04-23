@@ -6,14 +6,10 @@ export class ProfileDto {
     name?: string;
 
     @IsOptional()
-    @IsNumber()
-    age?: number;
+    @IsString()
+    age?: string;
 
     @IsOptional()
     @IsString()
     avatar?: string;
-
-    @IsOptional()
-    @IsString()
-    role?: 'TEACHER' | 'STUDENT';
 }

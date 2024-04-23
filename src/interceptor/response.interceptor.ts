@@ -1,5 +1,5 @@
 import { response } from 'express';
-import { CallHandler, ExecutionContext, Injectable, NestInterceptor } from '@nestjs/common';
+import { CallHandler, ExecutionContext, Injectable, NestInterceptor, Body } from '@nestjs/common';
 import { map } from 'rxjs';
 
 export interface Response<T> {
@@ -13,7 +13,6 @@ export class ResponseInterceptor implements NestInterceptor<any, Response<any>> 
             map((data) => {
                 if (data?.password) delete data.password;
                 if (data?.refreshToken) delete data.refreshToken;
-
                 return {
                     data,
                 };
