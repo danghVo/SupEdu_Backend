@@ -715,7 +715,7 @@ export class PostService {
                 await this.notification.createNotification(
                     post.class.ownerUuid,
                     post.class.ownerUuid,
-                    `/class/${post.class.uuid}/exercise/${post.uuid}`,
+                    `/class/${post.class.uuid}/exercise/${post.uuid}/score`,
                     user.name,
                     'assignment',
                     {

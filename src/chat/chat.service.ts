@@ -380,6 +380,7 @@ export class ChatService {
             });
 
             groupExist.users.forEach((user: { userUuid: string }) => {
+                if(user.userUuid !== fromUserUuid)
                 this.notification.createNotification(
                     user.userUuid,
                     user.userUuid,
@@ -397,10 +398,13 @@ export class ChatService {
                 return 'Tin nhắn mới';
             });
 
+        
             targetGroup.users.forEach((user: { userUuid: string }) => {
-                this.socket.server.emit(`${user.userUuid}/newMessage`, () => {
-                    return 'Tin nhắn mới';
-                });
+                if (user.userUuid !== fromUserUuid) {
+                    this.socket.server.emit(`${user.userUuid}/newMessage`, () => {
+                        return 'Tin nhắn mới';
+                    });
+                }
             });
 
             return { message: 'Gửi tin nhắn thành công' };

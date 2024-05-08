@@ -113,7 +113,7 @@ export class AuthService {
                         where: { isVerify: false, uuid },
                     });
 
-                    if (!user.isVerify) {
+                    if (!user?.isVerify) {
                         await this.prisma.user.delete({
                             where: { uuid },
                         });

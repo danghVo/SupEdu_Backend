@@ -2,7 +2,6 @@ import { UpdateClassDto } from './dto/updateClass.dto';
 import { Injectable, ForbiddenException } from '@nestjs/common';
 import { CreateClassDto } from './dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import * as argon2 from 'argon2';
 import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { AwsService } from 'src/aws/aws.service';
 import { SocketGateway } from 'src/socket/socket.gateway';
@@ -17,10 +16,6 @@ export class ClassService {
 
     async createClass(createClassDto: CreateClassDto, teacherUuid: string) {
         try {
-            let hashedPassword: string | null;
-            if (createClassDto.password) {
-                hashedPassword = await argon2.hash(createClassDto.password);
-            } else hashedPassword = null;
 
             const newClass = await this.prisma.class.create({
                 data: {
@@ -29,7 +24,7 @@ export class ClassService {
                     description: createClassDto.description || null,
                     theme: createClassDto.theme,
                     textColor: createClassDto.textColor,
-                    password: hashedPassword,
+                    password: createClassDto.password,
                     requireApprove: createClassDto.requireApprove === 'true' ? true : false,
                 },
             });
@@ -296,6 +291,7 @@ export class ClassService {
                 delete classExist.requireApprove;
             }
 
+
             if (classExist.owner.avatar) {
                 classExist.owner.avatar = await this.aws.getImage(classExist.owner.avatar);
             }
@@ -304,6 +300,7 @@ export class ClassService {
                 ...classExist,
                 status: joinStatus ? joinStatus.status : 'UNJOINED',
                 isPassword: classExist.password ? true : false,
+                showPassword: userUuid === classExist.ownerUuid ?  classExist.password  : undefined,
                 isOwner: classExist.owner.uuid === userUuid,
                 posts: joinStatus?.status !== 'JOINED' ? [] : classExist.posts,
                 theme: {
@@ -386,15 +383,13 @@ export class ClassService {
                 throw new ForbiddenException('Không có quyền truy cập');
             }
 
-            // Update class logic here
-            if (updateClassDto.password) updateClassDto.password = await argon2.hash(updateClassDto.password);
-
             const updatedClass = await this.prisma.class.update({
                 where: {
                     uuid: classUuid,
                 },
                 data: updateClassDto,
             });
+
 
             this.socket.server.emit(`${classUuid}`, () => {
                 return { message: 'Lớp đã được cập nhật' };
@@ -469,7 +464,7 @@ export class ClassService {
         });
 
         if (classExist.password) {
-            const verify = await argon2.verify(classExist.password, passsword);
+            const verify = classExist.password === passsword;
 
             if (!verify) {
                 throw new ForbiddenException('Sai mật khẩu');
